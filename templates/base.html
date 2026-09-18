@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Aide au rappel commercial{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <h1>Aide au rappel commercial</h1>
+    <nav>
+      <a href="{{ url_for('formulaire') }}">Client unique</a>
+      <a href="{{ url_for('import_csv') }}">Import CSV</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p class="avertissement">
+      Le score est une estimation pédagogique du risque de churn, calculée par
+      un modèle de démonstration. Ce n'est pas une probabilité calibrée ni une
+      certitude de résiliation. Seuil de décision utilisé pour l'alerte :
+      {{ threshold }} (convention pédagogique, pas un seuil métier optimisé).
+    </p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Import CSV — {{ super() }}{% endblock %}
+{% block content %}
+<h2>Importer un fichier CSV de clients</h2>
+
+{% if errors %}
+<ul class="erreurs">
+  {% for erreur in errors %}<li>{{ erreur }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="formulaire">
+  <label>Fichier CSV
+    <input type="file" name="fichier" accept=".csv" required>
+  </label>
+  <button type="submit">Importer</button>
+</form>
+
+<p class="aide">
+  Colonnes obligatoires : <code>Age</code>, <code>Total_Purchase</code>,
+  <code>Account_Manager</code>, <code>Years</code>, <code>Num_Sites</code>.
+  Colonnes optionnelles reprises si présentes : <code>Names</code>,
+  <code>Company</code>.
+</p>
+{% endblock %}

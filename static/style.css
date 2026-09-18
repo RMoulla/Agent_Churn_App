@@ -1,0 +1,159 @@
+:root {
+  --couleur-texte: #1f2933;
+  --couleur-fond: #f5f7fa;
+  --couleur-accent: #2563eb;
+  --couleur-risque-eleve: #b91c1c;
+  --couleur-risque-eleve-fond: #fee2e2;
+  --couleur-risque-faible: #15803d;
+  --couleur-risque-faible-fond: #dcfce7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--couleur-texte);
+  background: var(--couleur-fond);
+}
+
+.site-header {
+  background: white;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #d7dce1;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.site-header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.site-header nav a {
+  margin-right: 1rem;
+  color: var(--couleur-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+main {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 420px;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #d7dce1;
+}
+
+.formulaire label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+}
+
+.formulaire input,
+.formulaire select {
+  padding: 0.5rem;
+  border: 1px solid #b6bfc9;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.6rem 1rem;
+  background: var(--couleur-accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.erreurs {
+  background: var(--couleur-risque-eleve-fond);
+  color: var(--couleur-risque-eleve);
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.resultat {
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+}
+
+.resultat--eleve {
+  background: var(--couleur-risque-eleve-fond);
+  color: var(--couleur-risque-eleve);
+}
+
+.resultat--faible {
+  background: var(--couleur-risque-faible-fond);
+  color: var(--couleur-risque-faible);
+}
+
+table.resultats {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 1rem;
+}
+
+table.resultats th,
+table.resultats td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid #e2e6ea;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+tr.ligne--eleve td {
+  background: var(--couleur-risque-eleve-fond);
+}
+
+tr.ligne--faible td {
+  background: white;
+}
+
+.avertissement {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem 2rem;
+  font-size: 0.85rem;
+  color: #52606d;
+}
+
+.aide {
+  font-size: 0.9rem;
+  color: #52606d;
+}
+
+.aide code {
+  background: #e5e9ee;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+
+.avertissement-demo {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
