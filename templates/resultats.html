@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Résultats — {{ super() }}{% endblock %}
+{% block content %}
+<h2>Clients scorés</h2>
+
+{% if demo_import %}
+<p class="avertissement-demo">
+  Ce fichier contient une colonne « Churn » historique : elle est ignorée
+  pour le calcul des scores. Ce chargement est une démonstration du parcours
+  d'import, distincte de l'évaluation du modèle (voir
+  <code>reports/evaluation_report.md</code>).
+</p>
+{% endif %}
+
+{% if errors %}
+<ul class="erreurs">
+  {% for erreur in errors %}<li>{{ erreur }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<p>Liste triée par score décroissant. Sélectionnez les clients à rappeler puis exportez la sélection.</p>
+
+<form method="post" action="{{ url_for('export_selection') }}">
+  <input type="hidden" name="version" value="{{ version }}">
+  <table class="resultats">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Identifiant</th>
+        {% if has_names %}<th>Nom</th>{% endif %}
+        {% if has_company %}<th>Société</th>{% endif %}
+        <th>Âge</th>
+        <th>Achats totaux</th>
+        <th>Chargé de compte</th>
+        <th>Ancienneté</th>
+        <th>Sites</th>
+        <th>Score</th>
+        <th>Alerte</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for client in records %}
+      <tr class="{{ 'ligne--eleve' if client.alerte == 'Risque élevé' else 'ligne--faible' }}">
+        <td><input type="checkbox" name="selection" value="{{ client.id }}"></td>
+        <td>{{ client.id }}</td>
+        {% if has_names %}<td>{{ client.Names or '' }}</td>{% endif %}
+        {% if has_company %}<td>{{ client.Company or '' }}</td>{% endif %}
+        <td>{{ client.Age }}</td>
+        <td>{{ client.Total_Purchase }}</td>
+        <td>{{ client.Account_Manager }}</td>
+        <td>{{ client.Years }}</td>
+        <td>{{ client.Num_Sites }}</td>
+        <td>{{ (client.score * 100) | round(1) }} %</td>
+        <td>{{ client.alerte }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button type="submit">Exporter la sélection en CSV</button>
+</form>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Scorer un client — {{ super() }}{% endblock %}
+{% block content %}
+<h2>Scorer un client</h2>
+
+{% if errors %}
+<ul class="erreurs">
+  {% for erreur in errors %}<li>{{ erreur }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<form method="post" class="formulaire">
+  <label>Âge (Age)
+    <input type="number" step="1" name="Age" value="{{ form_values.Age }}" required>
+  </label>
+  <label>Montant total d'achats (Total_Purchase)
+    <input type="number" step="0.01" name="Total_Purchase" value="{{ form_values.Total_Purchase }}" required>
+  </label>
+  <label>Compte suivi par un chargé de compte (Account_Manager)
+    <select name="Account_Manager">
+      <option value="0" {% if form_values.Account_Manager == "0" %}selected{% endif %}>Non (0)</option>
+      <option value="1" {% if form_values.Account_Manager == "1" %}selected{% endif %}>Oui (1)</option>
+    </select>
+  </label>
+  <label>Ancienneté en années (Years)
+    <input type="number" step="0.01" name="Years" value="{{ form_values.Years }}" required>
+  </label>
+  <label>Nombre de sites (Num_Sites)
+    <input type="number" step="1" name="Num_Sites" value="{{ form_values.Num_Sites }}" required>
+  </label>
+  <button type="submit">Calculer le score</button>
+</form>
+
+{% if result %}
+<section class="resultat resultat--{{ 'eleve' if result.alerte == 'Risque élevé' else 'faible' }}">
+  <p>Score de risque : <strong>{{ (result.score * 100) | round(1) }} %</strong></p>
+  <p>Alerte : <strong>{{ result.alerte }}</strong></p>
+</section>
+{% endif %}
+{% endblock %}
