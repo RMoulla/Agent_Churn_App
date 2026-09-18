@@ -12,9 +12,16 @@
 </p>
 {% endif %}
 
+{% if errors %}
+<ul class="erreurs">
+  {% for erreur in errors %}<li>{{ erreur }}</li>{% endfor %}
+</ul>
+{% endif %}
+
 <p>Liste triée par score décroissant. Sélectionnez les clients à rappeler puis exportez la sélection.</p>
 
 <form method="post" action="{{ url_for('export_selection') }}">
+  <input type="hidden" name="version" value="{{ version }}">
   <table class="resultats">
     <thead>
       <tr>

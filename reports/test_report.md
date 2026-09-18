@@ -2,16 +2,16 @@
 
 ## Portée
 
-29 tests pytest exécutés, tous passants :
+31 tests pytest exécutés, tous passants :
 
 - 7 tests dans [tests/test_model_pipeline.py](../tests/test_model_pipeline.py)
   (étape 2 : reproductibilité du split, absence de fuite de cible, colonnes
   exclues, cohérence des scores).
-- 22 tests dans [tests/test_app.py](../tests/test_app.py) (étape 5 :
+- 24 tests dans [tests/test_app.py](../tests/test_app.py) (étape 5 :
   parcours de l'interface Flask, via le client de test Flask).
 
 ```
-29 passed in 2.70s
+31 passed in 2.87s
 ```
 
 ## Cas fonctionnels couverts (tests/test_app.py)
@@ -37,6 +37,8 @@
 | `test_import_headers_only_treated_as_empty_file` | CSV avec uniquement l'en-tête (0 ligne de données) | Traité comme un fichier vide — OK |
 | `test_full_historical_csv_import_is_a_demo_and_ignores_churn` | Import de `customer_churn.csv` complet (900 lignes) | Avertissement « démonstration » affiché, colonne `Churn` ignorée du scoring et absente des enregistrements — OK |
 | `test_routes_never_call_pipeline_fit` | `LogisticRegression.fit` intercepté pour lever une erreur s'il est appelé | Formulaire et import CSV fonctionnent sans jamais appeler `fit` — OK |
+| `test_export_rejects_selection_from_a_previous_import` | Import A, puis import B dans la même session ; export avec la version de A | Export refusé (page résultats avec message d'erreur), aucun client exporté ; export avec la version de B accepté et conforme — OK |
+| `test_export_rejects_missing_version` | Export sans champ `version` | Export refusé avec message d'erreur, aucun client exporté — OK |
 
 ## Corrections apportées pendant l'écriture des tests
 
@@ -58,6 +60,20 @@
   fichier venant d'être rejeté. Corrigé : toute erreur d'import supprime
   désormais l'entrée de `_IMPORT_STORE` pour la session, avant même
   d'afficher le message d'erreur.
+- **Bug confirmé en revue finale — réutilisation silencieuse des
+  identifiants entre deux imports d'une même session** : les identifiants de
+  ligne (`id`) recommencent à 1 à chaque import. Une page `/resultats`
+  affichée avant un nouvel import restait utilisable pour exporter, via
+  `/export`, les clients du **nouvel** import (mêmes identifiants, données
+  différentes), sans aucun avertissement. Corrigé en ajoutant une **version
+  unique par import** (UUID), stockée avec les résultats et transmise en
+  champ caché du formulaire d'export ; `/export` vérifie strictement cette
+  version et refuse — avec un message français explicite, sans exporter
+  aucun client — toute soumission avec une version absente ou périmée.
+  Test de régression :
+  `test_export_rejects_selection_from_a_previous_import` (import A, import B,
+  refus avec la version de A, export correct avec la version de B) et
+  `test_export_rejects_missing_version`.
 
 ## Vérifications complémentaires
 

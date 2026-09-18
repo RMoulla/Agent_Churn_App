@@ -25,7 +25,7 @@ OPTIONAL_COLUMNS = ["Names", "Company"]
 EXPORT_COLUMNS = ["id", "Names", "Company", *FEATURE_COLUMNS, "score", "alerte"]
 
 # Résultats d'import en cours, indexés par jeton de session (démo mono-processus).
-# Chaque entrée : {"records": [...], "demo_import": bool}.
+# Chaque entrée : {"records": [...], "demo_import": bool, "version": str}.
 _IMPORT_STORE: dict[str, dict] = {}
 
 
@@ -112,10 +112,31 @@ def import_csv():
             record["alerte"] = alert_label(score)
             records.append(record)
 
-        _IMPORT_STORE[token] = {"records": records, "demo_import": demo_import}
+        _IMPORT_STORE[token] = {
+            "records": records,
+            "demo_import": demo_import,
+            # Version unique par import : empêche qu'une sélection affichée
+            # avant un nouvel import n'exporte silencieusement les clients
+            # du nouvel import (les identifiants sont réutilisés à chaque import).
+            "version": uuid.uuid4().hex,
+        }
         return redirect(url_for("resultats"))
 
     return render_template("import.html", errors=errors)
+
+
+def _render_resultats(entry, errors=None):
+    records = entry["records"]
+    records_tries = sorted(records, key=lambda r: r["score"], reverse=True)
+    return render_template(
+        "resultats.html",
+        records=records_tries,
+        has_names=any(r["Names"] for r in records),
+        has_company=any(r["Company"] for r in records),
+        demo_import=entry["demo_import"],
+        version=entry["version"],
+        errors=errors or [],
+    )
 
 
 @app.route("/resultats")
@@ -124,18 +145,7 @@ def resultats():
     if not entry:
         return redirect(url_for("import_csv"))
 
-    records = entry["records"]
-    records_tries = sorted(records, key=lambda r: r["score"], reverse=True)
-    has_names = any(r["Names"] for r in records)
-    has_company = any(r["Company"] for r in records)
-
-    return render_template(
-        "resultats.html",
-        records=records_tries,
-        has_names=has_names,
-        has_company=has_company,
-        demo_import=entry["demo_import"],
-    )
+    return _render_resultats(entry)
 
 
 @app.route("/export", methods=["POST"])
@@ -143,6 +153,17 @@ def export_selection():
     entry = _IMPORT_STORE.get(session.get("import_token"))
     if not entry:
         return redirect(url_for("import_csv"))
+
+    submitted_version = request.form.get("version")
+    if not submitted_version or submitted_version != entry["version"]:
+        return _render_resultats(
+            entry,
+            errors=[
+                "Cette sélection provient d'un import précédent et n'est plus "
+                "valide : veuillez sélectionner à nouveau les clients dans la "
+                "liste actuelle avant d'exporter."
+            ],
+        )
 
     records = entry["records"]
     selected_ids = {int(value) for value in request.form.getlist("selection")}

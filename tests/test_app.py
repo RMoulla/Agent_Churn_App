@@ -169,6 +169,7 @@ def test_t8_t9_duplicate_names_stable_ids_and_exact_export(client):
 
     token = _session_token(client)
     records = app_module._IMPORT_STORE[token]["records"]
+    version = app_module._IMPORT_STORE[token]["version"]
     by_id = {record["id"]: record for record in records}
     assert by_id[1]["Names"] == "Alice Martin" and by_id[1]["Company"] == "Harvey LLC"
     assert by_id[3]["Names"] == "Alice Martin" and by_id[3]["Company"] == "AutreCo"
@@ -183,7 +184,10 @@ def test_t8_t9_duplicate_names_stable_ids_and_exact_export(client):
     selected_ids = [sorted_ids[0], sorted_ids[-1]]
     assert abs(ids_in_order.index(selected_ids[0]) - ids_in_order.index(selected_ids[1])) > 1
 
-    export_response = client.post("/export", data={"selection": [str(i) for i in selected_ids]})
+    export_response = client.post(
+        "/export",
+        data={"selection": [str(i) for i in selected_ids], "version": version},
+    )
     assert export_response.status_code == 200
 
     reader = csv.DictReader(io.StringIO(export_response.get_data(as_text=True)))
@@ -199,6 +203,54 @@ def test_t8_t9_duplicate_names_stable_ids_and_exact_export(client):
             assert float(row[feature]) == pytest.approx(expected[feature])
         assert float(row["score"]) == pytest.approx(expected["score"])
         assert row["alerte"] == expected["alerte"]
+
+
+# --- Régression : une sélection affichée avant un nouvel import ne doit ----
+# --- jamais exporter silencieusement les clients du nouvel import ----------
+
+
+def test_export_rejects_selection_from_a_previous_import(client):
+    client.post("/import", data=_csv_upload(CSV_ONE_CLIENT), content_type="multipart/form-data")
+    token = _session_token(client)
+    version_a = app_module._IMPORT_STORE[token]["version"]
+    selection_a = [record["id"] for record in app_module._IMPORT_STORE[token]["records"]]
+
+    csv_import_b = (
+        "Age,Total_Purchase,Account_Manager,Years,Num_Sites\n50,2000,1,3,4\n60,3000,0,4,6\n"
+    )
+    client.post("/import", data=_csv_upload(csv_import_b), content_type="multipart/form-data")
+    version_b = app_module._IMPORT_STORE[token]["version"]
+    records_b = app_module._IMPORT_STORE[token]["records"]
+    assert version_b != version_a
+
+    # La version de l'import A (précédent) ne doit exporter aucun client de l'import B.
+    stale_response = client.post(
+        "/export", data={"selection": [str(i) for i in selection_a], "version": version_a}
+    )
+    assert stale_response.status_code == 200
+    assert stale_response.headers["Content-Type"].startswith("text/html")
+    assert "import précédent" in stale_response.get_data(as_text=True)
+
+    # La version courante (import B) exporte correctement les clients de cet import.
+    fresh_response = client.post(
+        "/export", data={"selection": [str(records_b[0]["id"])], "version": version_b}
+    )
+    assert fresh_response.status_code == 200
+    assert fresh_response.headers["Content-Type"].startswith("text/csv")
+    reader = csv.DictReader(io.StringIO(fresh_response.get_data(as_text=True)))
+    assert {int(row["id"]) for row in reader} == {records_b[0]["id"]}
+
+
+def test_export_rejects_missing_version(client):
+    client.post("/import", data=_csv_upload(CSV_ONE_CLIENT), content_type="multipart/form-data")
+    token = _session_token(client)
+    records = app_module._IMPORT_STORE[token]["records"]
+
+    response = client.post("/export", data={"selection": [str(records[0]["id"])]})
+
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
+    assert "import précédent" in response.get_data(as_text=True)
 
 
 # --- T10 : modèle absent ----------------------------------------------------
